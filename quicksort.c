@@ -12,7 +12,6 @@
 #include "util.h"
 
 //implement->Listo!!!!!!!!!!!
-
 int quicksort(UINT* A, int lo, int hi) {
 	if(lo<hi){
 		int x = A[lo];
@@ -20,19 +19,32 @@ int quicksort(UINT* A, int lo, int hi) {
 		for(int i= lo+1;i<hi;i++){
 			if(A[i]<=x){
 				s = s+1;
-				A[s]=A[i];}
+				UINT aux;
+				aux= A[s];
+				A[s]=A[i];
+				A[i]=aux;}
 			}
+		UINT aux1;
+		aux1=A[lo];
 		A[lo] = A[s];
+		A[s]=aux1;
 		quicksort(A,lo,s);
 		quicksort(A,s+1,hi);
 		}
     return 0;	
 }
 
-// TODO: implement
-int parallel_quicksort(UINT* A, int lo, int hi) {
-    return 0;
-}
+// TODO: implement				//T ingresado por comando
+/*int parallel_quicksort(UINT* A, int lo, int hi) {
+	int proce_disp = sysconf(_SC_NPROCESSORS_ONLN)*2;
+	pthread_t m_tid[proce_disp];
+	int tamanio = hi/proce_disp;
+	int pivoteal = rand() % hi;
+	
+
+	
+	return 0;
+}*/
 
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
@@ -151,6 +163,16 @@ int main(int argc, char** argv) {
             readbytes = read(fd, readbuf + readvalues, sizeof(UINT) * numvalues);
             readvalues += readbytes / 4;
         }
+	printf("E%d: ",j);
+	for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++){
+		printf("%u, ",*pv);
+	}
+	
+	quicksort(readbuf,0,numvalues-1);
+	printf("\n\n S%d: ",j);
+	for(UINT *pv=readbuf; pv<readbuf + numvalues; pv++){
+		printf("%u, ",*pv);
+	}
 	//juntar readbuf con ambos quicksorts!!
 	free(readbuf);
 	}
