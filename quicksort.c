@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <pthread.h>
 #include <stdlib.h>
 #include <math.h>
 #include <unistd.h>
@@ -10,6 +11,38 @@
 #include "types.h"
 #include "const.h"
 #include "util.h"
+
+typedef struct data{
+	UINT* dat;
+	int lo;
+	int hi;
+	int ciclos;
+}data;
+
+int partition(UINT* A, int lo, int hi,int pivote)
+{
+    	int pivot;
+    	pivot = A[pivote];
+	UINT aux;
+	aux= A[pivote];
+	A[pivote]=A[hi];
+	A[hi]=aux;
+	int guardar= lo;
+	for(int i=lo; i<hi;i++){
+		if(A[i]<= pivot){
+			UINT aux1;
+			aux1= A[i];
+			A[i]=A[guardar];
+			A[guardar]=aux1;
+			guardar++;}
+	}
+	UINT aux2;
+	aux2= A[guardar];
+	A[guardar]=A[hi];
+	A[hi]=aux2;
+	return guardar;
+    
+}
 
 //implement->Listo!!!!!!!!!!!
 int quicksort(UINT* A, int lo, int hi) {
@@ -34,17 +67,41 @@ int quicksort(UINT* A, int lo, int hi) {
     return 0;	
 }
 
-// TODO: implement				//T ingresado por comando
-/*int parallel_quicksort(UINT* A, int lo, int hi) {
-	int proce_disp = sysconf(_SC_NPROCESSORS_ONLN)*2;
-	pthread_t m_tid[proce_disp];
-	int tamanio = hi/proce_disp;
-	int pivoteal = rand() % hi;
-	
+int proce_disp;
 
+void parallel_quicksort(UINT* A, int lo, int hi,int ciclos);
+
+void *conect(void * dat1){
+	struct data *aux = dat1;
+	parallel_quicksort(aux->dat, aux->lo,aux->hi,aux->ciclos);
+	return NULL;
+	}
+
+// TODO: implement				
+void parallel_quicksort(UINT* A, int lo, int hi,int ciclos) {
+   
+ 	int j;
 	
-	return 0;
-}*/
+    	if( lo < hi ) 
+    	{
+		int pivote= lo +(hi-lo)/2;
+    	    j = partition(A, lo, hi,pivote);
+	
+    	    if(ciclos > 0){
+		struct data entrada = {A,lo,j-1,ciclos};
+		pthread_t trencito;
+		pthread_create(&trencito,NULL,conect, &entrada);
+		parallel_quicksort(A,j+1,hi,ciclos);
+		pthread_join(trencito,NULL);
+		pivote--;}
+    	    else
+    	    {
+    	        quicksort(A, lo, j - 1);
+    	        quicksort(A, j + 1, hi);
+    	    }
+    	}
+}
+
 
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
@@ -123,7 +180,9 @@ int main(int argc, char** argv) {
         	exit(-1);
     	}
 
+	int ciclos = 2 * (sysconf(_SC_NPROCESSORS_ONLN));
 	for(int j=0; j<flag4;j++){
+
 
         char begin[100];
     	char msg[80];
@@ -163,29 +222,28 @@ int main(int argc, char** argv) {
             readbytes = read(fd, readbuf + readvalues, sizeof(UINT) * numvalues);
             readvalues += readbytes / 4;
         }
-	printf("E%d: ",j);
+	printf("E%d: ",j+1);
 	for (UINT *pv = readbuf; pv < readbuf + numvalues; pv++){
 		printf("%u, ",*pv);
 	}
 	
-	quicksort(readbuf,0,numvalues-1);
-	printf("\n\n S%d: ",j);
+	parallel_quicksort(readbuf,0,numvalues-1,ciclos);
+	
+	printf("\n\n S%d: ",j+1);
+	
 	for(UINT *pv=readbuf; pv<readbuf + numvalues; pv++){
 		printf("%u, ",*pv);
 	}
 	//juntar readbuf con ambos quicksorts!!
 	free(readbuf);
-	}
-	/* Issue the END command to datagen */
-    	int rd = strlen(DATAGEN_END_CMD);
-    	if (write(fd, DATAGEN_END_CMD, strlen(DATAGEN_END_CMD)) != rd) {
+	int rd = strlen(DATAGEN_END_CMD);
+	if (write(fd, DATAGEN_END_CMD, strlen(DATAGEN_END_CMD)) != rd) {
     	    if (rd > 0) fprintf(stderr, "[quicksort] partial write.\n");
     	    else {
     	        perror("[quicksort] write error.\n");
     	        close(fd);
-    	        exit(-1);
     	    }
     	}
+	}
 		close(fd);		
-	    	exit(0);
 	}	

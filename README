@@ -1,2 +1,15 @@
 Johnny Donoso
 
+
+PROBLEMAS EN LA IMPLEMENTACIÓN
+**********************************
+
+-Un problema que encontre, fue que proceso pasarle al thread creado al momento de hacer la "recursión" de el quicksort. Buscando la documentación de pthread_create, revise que necesitaba una conección entre esta forma de creación de threads, con los datos que entraban al parallel_quicksort como datos sabidos, es por eso que tuve que crear una función que me conectará la forma de entrada de datos de el phtread_Create(como una sola estructura de dato) junto con el parallel_quicksort, llamada void(* conect).
+
+-Otro problema que encontre, es que según enunciado, el index de el pivote elegido tenia que ser un numero aleatorio, intentandolo haciendo 100% aleatorio con rand(), no me funcionaba, por lo que opté por el mejor caso, y este es que el pivote esté muy cerca de la mediana de el array, es por eso que el pivote lo deje como 
+	pivote = lo +(hi-lo)/2;
+
+FUNCIONALIDAD PENDIENTE SIN REALIZAR
+***********************************
+
+Creo que algunos manejos de errores al momento de crear los threads en el parallel_quicksort
